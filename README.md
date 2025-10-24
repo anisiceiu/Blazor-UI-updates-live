@@ -1,5 +1,6 @@
 # Blazor-UI-updates-live
 Whenever a row is inserted, updated, or deleted in a SQL Server table, the Blazor UI updates live — for example, an item list, dashboard counter, or notification panel updates instantly.
+
 🔷 2. The Best Approach: SQL Dependency + SignalR
 
 The most reliable and scalable way to achieve this:
