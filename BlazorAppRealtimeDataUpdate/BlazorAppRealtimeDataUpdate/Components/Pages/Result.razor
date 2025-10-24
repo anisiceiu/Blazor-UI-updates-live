@@ -1,0 +1,107 @@
+﻿@page "/results"
+@rendermode InteractiveServer
+@using BlazorAppRealtimeDataUpdate.Models
+@using BlazorAppRealtimeDataUpdate.Services
+@inject NavigationManager Navigation
+@inject ResultService resultService
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.SignalR.Client
+
+<h3>Results</h3>
+<style>
+        .btn-pass {
+        background-color: green;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        box-shadow:5px;
+    }
+
+    .btn-fail {
+        background-color: red;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+         box-shadow:5px;
+    }
+
+</style>
+@if (results == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <ul>
+        @foreach (var p in results)
+        {
+            <li>
+                @p.Score -
+                <button class="@GetButtonClass(p.Result)">
+                    @p.Result
+                </button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private HubConnection? hubConnection;
+    private List<ResultModel>? results;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+    .WithUrl(Navigation.ToAbsoluteUri("/notificationHub"))
+    .WithAutomaticReconnect()
+    .Build();
+
+        // Register event before starting
+        
+
+        hubConnection.On<string>("ReceiveResultChange",async message =>
+        {
+            Console.WriteLine("SignalR message received: " + message);
+
+            // Ensure UI updates happen on the Blazor synchronization context
+            await InvokeAsync(async () =>
+            {
+                await LoadResults();
+                StateHasChanged(); // force UI refresh
+            });
+        });
+
+        try
+        {
+            await hubConnection.StartAsync();
+            Console.WriteLine($"SignalR connected: {hubConnection.State}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR start failed: {ex.Message}");
+        }
+
+        await LoadResults();
+    }
+
+    private async Task LoadResults()
+    {
+        results = await resultService.GetAllAsync();
+    }
+
+    private string GetButtonClass(string result)
+    {
+        return result.ToLower() == "pass" ? "btn-pass" : "btn-fail";
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection != null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
