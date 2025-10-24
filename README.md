@@ -10,5 +10,7 @@ Use SqlDependency or SqlTableDependency in your backend (C#/.NET) to get notifie
 Use SignalR to push those notifications in real time to all connected Blazor clients.
 
 In Blazor, listen to those SignalR messages and refresh the UI.
+
 * Requires SQL Server Broker enabled:
+  
 ALTER DATABASE YourDb SET ENABLE_BROKER WITH ROLLBACK IMMEDIATE;
